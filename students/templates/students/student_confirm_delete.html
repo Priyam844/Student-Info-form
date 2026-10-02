@@ -1,0 +1,20 @@
+{% extends "students/base.html" %}
+
+{% block title %}Delete {{ student }}{% endblock %}
+
+{% block content %}
+<h1>Delete record</h1>
+
+<div class="card">
+  <p>Are you sure you want to permanently delete <strong>{{ student }}</strong>?</p>
+  <p class="muted">This removes the row from the database and cannot be undone.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="actions">
+      <button class="btn danger" type="submit">Yes, delete</button>
+      <a class="btn secondary" href="{% url 'student_detail' student.pk %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

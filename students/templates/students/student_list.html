@@ -1,0 +1,52 @@
+{% extends "students/base.html" %}
+
+{% block title %}All students{% endblock %}
+
+{% block content %}
+<h1>All students <span class="muted">({{ total }})</span></h1>
+
+<form class="searchbar" method="get" action="{% url 'student_list' %}">
+  <input type="text" name="q" value="{{ query }}" placeholder="Search by name, ID, email, phone, city...">
+  <button class="btn secondary" type="submit">Search</button>
+  <a class="btn" href="{% url 'student_create' %}">+ Add student</a>
+</form>
+
+{% if students %}
+<table>
+  <thead>
+    <tr>
+      <th>Student ID</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Course</th>
+      <th>City</th>
+      <th>Active</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in students %}
+    <tr>
+      <td><a href="{% url 'student_detail' s.pk %}">{{ s.student_id }}</a></td>
+      <td>{{ s.first_name }} {{ s.last_name }}</td>
+      <td>{{ s.email }}</td>
+      <td>{{ s.phone }}</td>
+      <td>{{ s.course|default:"-" }}</td>
+      <td>{{ s.city|default:"-" }}</td>
+      <td>{{ s.is_active|yesno:"Yes,No" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% elif query %}
+<div class="empty">
+  <p>No students match "<strong>{{ query }}</strong>".</p>
+  <p><a href="{% url 'student_list' %}">Clear search</a></p>
+</div>
+{% else %}
+<div class="empty">
+  <p>No students yet.</p>
+  <p><a class="btn" href="{% url 'student_create' %}">Add the first student</a></p>
+</div>
+{% endif %}
+{% endblock %}

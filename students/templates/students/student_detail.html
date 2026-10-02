@@ -1,0 +1,32 @@
+{% extends "students/base.html" %}
+
+{% block title %}{{ student }}{% endblock %}
+
+{% block content %}
+<h1>{{ student.first_name }} {{ student.last_name }}</h1>
+
+<div class="card">
+  <div class="grid">
+    <p><span class="label">Student ID</span>{{ student.student_id }}</p>
+    <p><span class="label">Email</span><a href="mailto:{{ student.email }}">{{ student.email }}</a></p>
+    <p><span class="label">Phone</span>{{ student.phone }}</p>
+    <p><span class="label">Date of birth</span>{{ student.date_of_birth|default:"-" }}</p>
+    <p><span class="label">Address</span>{{ student.address|default:"-" }}</p>
+    <p><span class="label">City</span>{{ student.city|default:"-" }}</p>
+    <p><span class="label">State / Province</span>{{ student.state|default:"-" }}</p>
+    <p><span class="label">Postal code</span>{{ student.postal_code|default:"-" }}</p>
+    <p><span class="label">Country</span>{{ student.country|default:"-" }}</p>
+    <p><span class="label">Course</span>{{ student.course|default:"-" }}</p>
+    <p><span class="label">Department</span>{{ student.department|default:"-" }}</p>
+    <p><span class="label">Enrollment year</span>{{ student.enrollment_year|default:"-" }}</p>
+    <p><span class="label">Currently enrolled</span>{{ student.is_active|yesno:"Yes,No" }}</p>
+    <p><span class="label">Record created</span>{{ student.created_at|date:"Y-m-d H:i" }}</p>
+    <p><span class="label">Last updated</span>{{ student.updated_at|date:"Y-m-d H:i" }}</p>
+  </div>
+
+  <div class="actions">
+    <a class="btn secondary" href="{% url 'student_list' %}">Back to list</a>
+    <a class="btn danger" href="{% url 'student_delete' student.pk %}">Delete record</a>
+  </div>
+</div>
+{% endblock %}

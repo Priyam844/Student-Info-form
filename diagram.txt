@@ -1,0 +1,130 @@
+================================================================================
+DIAGRAM.TXT  --  Symbolic diagram: Django  <->  Supabase
+================================================================================
+
+Read top to bottom. "==>" = HTTP request/response, "-->" = internal call.
+
+
+--------------------------------------------------------------------------------
+A. REQUEST / RESPONSE CYCLE  (saving a student)
+--------------------------------------------------------------------------------
+
+   +------------------+         ==POST /students/new/==>      +---------------------------+
+   |                  |                                       |      DJANGO (config/)     |
+   |   USER BROWSER   |  form fields: name, phone, email,     |                           |
+   |                  |  student ID, address, ...             |  urls.py                  |
+   |  (student_form   |                                       |    |                      |
+   |   .html)         |  <== HTML page / errors ==            |    v                      |
+   |                  |                                       |  views.py                 |
+   +------------------+                                       |  student_create()         |
+                                                              |    |                      |
+                                                              |    v                      |
+                                                              |  forms.py  StudentForm    |
+                                                              |  validation:              |
+                                                              |   - required fields       |
+                                                              |   - email unique          |
+                                                              |   - student_id unique     |
+                                                              |   - phone regex           |
+                                                              +----+----------------------+
+                                                                   |
+                                              invalid              | valid
+                                          +------------------------+
+                                          |                        v
+                                          |               +------------------+
+                                          |               |  models.py       |
+                                          |               |  Student.save()  |
+                                          |               +--------+---------+
+                                          |                        |
+                                          |                        v
+                                          |        +-------------------------------+
+                                          |        |  DJANGO ORM (SQL generator)   |
+                                          |        |  INSERT INTO students_student |
+                                          |        |  (...) VALUES (...);          |
+                                          |        +---------------+---------------+
+                                          |                        |
+                                          |                        v
+                                          |        +-------------------------------+
+                                          |        |  psycopg2 driver (TLS/SSL)   |
+                                          |        +---------------+---------------+
+                                          |                        |
+   re-render form                          |                        |  TCP + TLS, port 5432
+   with errorlist                          |                        v
+        ^                                  |    =========================================
+        |                                  |    =  SUPABASE (cloud)                   =
+        +----------------------------------+    =  Pooler (session)  aws-0-*.pooler    =
+                                              =      .supabase.com:5432             =
+                                              =               |                       =
+                                              =               v                       =
+                                              =   +---------------------------+       =
+                                              =   |  POSTGRESQL DATABASE      |       =
+                                              =   |  table: students_student  |       =
+                                              =   |  columns:                |       =
+                                              =   |   student_id  (unique)   |       =
+                                              =   |   first_name, last_name  |       =
+                                              =   |   email (unique), phone  |       =
+                                              =   |   date_of_birth          |       =
+                                              =   |   address, city, state   |       =
+                                              =   |   postal_code, country   |       =
+                                              =   |   course, department     |       =
+                                              =   |   enrollment_year        |       =
+                                              =   |   is_active              |       =
+                                              =   |   created_at, updated_at |       =
+                                              =   +---------------------------+       =
+                                              =========================================
+
+
+--------------------------------------------------------------------------------
+B. READING DATA BACK  (list page)
+--------------------------------------------------------------------------------
+
+  Browser  ==> GET /  ==>  views.student_list()
+                              |
+                              v
+                        Student.objects.all()  [ + ?q= search filter ]
+                              |
+                              v
+                        SQL: SELECT ... FROM students_student ORDER BY created_at DESC
+                              |
+                              v
+                        psycopg2  --TLS-->  Supabase Postgres
+                              |
+                              v
+                        rows returned  -->  student_list.html table  ==>  Browser
+
+
+--------------------------------------------------------------------------------
+C. WHERE THE CONFIG COMES FROM
+--------------------------------------------------------------------------------
+
+   .env  (SUPABASE_DB_URL=postgresql://postgres.REF:PW@...:5432/postgres)
+      |
+      v
+   config/settings.py :: build_database_config()
+      |   parses URL -> NAME, USER, PASSWORD, HOST, PORT, sslmode=require
+      v
+   DATABASES["default"]
+      |
+      +--> if SUPABASE_DB_URL missing  ==>  local db.sqlite3  (offline dev mode)
+
+
+--------------------------------------------------------------------------------
+D. MERMAID SOURCE (paste into mermaid.live or any Markdown preview)
+--------------------------------------------------------------------------------
+
+flowchart TD
+    U[Browser: student_form.html] -->|POST /students/new/| V[views.student_create]
+    V --> F[forms.StudentForm validation]
+    F -->|invalid| U
+    F -->|valid| M[models.Student.save]
+    M --> O[Django ORM builds SQL INSERT]
+    O --> P[psycopg2 driver - TLS]
+    P -->|port 5432| S[(Supabase Postgres:
+                        students_student)]
+    S -->|rows| L[views.student_list]
+    L --> T[student_list.html]
+    T -->|HTML| U
+
+    E[.env: SUPABASE_DB_URL] --> ST[config.settings
+                                    build_database_config]
+    ST -->|set| O
+    ST -->|missing| Q[(local db.sqlite3)]

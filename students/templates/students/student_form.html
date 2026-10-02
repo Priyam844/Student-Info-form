@@ -1,0 +1,30 @@
+{% extends "students/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="card">
+  <form class="styled" method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+
+    <div class="grid">
+      {% for field in form %}
+        <p>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </p>
+      {% endfor %}
+    </div>
+
+    <div class="actions">
+      <button class="btn" type="submit">{{ button_label }}</button>
+      <a class="btn secondary" href="{% url 'student_list' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
