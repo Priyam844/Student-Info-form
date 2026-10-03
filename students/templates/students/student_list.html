@@ -26,9 +26,10 @@
   </thead>
   <tbody>
     {% for s in students %}
-    <tr>
+    <tr class="rowlink" onclick="location.href='{% url 'student_detail' s.pk %}';" tabindex="0"
+        onkeydown="if(event.key==='Enter'){location.href='{% url 'student_detail' s.pk %}';}">
       <td><a href="{% url 'student_detail' s.pk %}">{{ s.student_id }}</a></td>
-      <td>{{ s.first_name }} {{ s.last_name }}</td>
+      <td><a href="{% url 'student_detail' s.pk %}">{{ s.first_name }} {{ s.last_name }}</a></td>
       <td>{{ s.email }}</td>
       <td>{{ s.phone }}</td>
       <td>{{ s.course|default:"-" }}</td>

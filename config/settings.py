@@ -114,22 +114,19 @@ def build_database_config() -> dict:
             "HOST": parsed.hostname,
             "PORT": str(parsed.port or 5432),
             "OPTIONS": options,
-            "CONN_MAX_AGE": 60,
+            "CONN_MAX_AGE": 300,
             "CONN_HEALTH_CHECKS": True,
             "ATOMIC_REQUESTS": False,
         }
     }
 
+DATABASES = build_database_config()
 
-
-DATABASES = {
+CACHES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "student-info-form",
+        "TIMEOUT": 15,
     }
 }
 
